@@ -1,0 +1,24 @@
+# Gradle / build
+.gradle/
+build/
+**/build/
+local.properties
+*.iml
+
+# Android Studio
+.idea/
+captures/
+
+# Kotlin
+.kotlin/
+
+# Generated
+gen/
+out/
+release/
+.cxx/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Anteprima del widget mostrata nel widget picker. Stilizzazione semplice
+     coerente con il colore brand di myCounter (#6750A4). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="180dp"
+    android:height="120dp"
+    android:viewportWidth="180"
+    android:viewportHeight="120">
+    <!-- Sfondo card -->
+    <path
+        android:fillColor="#F4EFF6"
+        android:pathData="M8,8 L172,8 L172,112 L8,112 Z" />
+    <!-- Pulsante TAP circolare -->
+    <path
+        android:fillColor="#6750A4"
+        android:pathData="M90,72 m-32,0 a32,32 0 1,0 64,0 a32,32 0 1,0 -64,0" />
+    <!-- Etichetta +1 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M85,69 L95,69 L95,75 L85,75 Z M88,65 L92,65 L92,79 L88,79 Z" />
+</vector>

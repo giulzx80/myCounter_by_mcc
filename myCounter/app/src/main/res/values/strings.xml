@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">myCounter by MCC</string>
+
+    <!-- TAP screen -->
+    <string name="tap_title">myCounter</string>
+    <string name="tap_subtitle">by MCC</string>
+    <string name="tap_create_first">Crea il tuo primo contatore</string>
+    <string name="tap_target_reached">Obiettivo raggiunto</string>
+
+    <!-- Lista contatori -->
+    <string name="list_title">Configuratore contatori</string>
+    <string name="list_new">Nuovo contatore</string>
+    <string name="list_empty">Nessun contatore</string>
+
+    <!-- Editor -->
+    <string name="editor_title_new">Nuovo contatore</string>
+    <string name="editor_title_edit">Modifica contatore</string>
+    <string name="editor_field_name">Nome (es. Conta Sigarette)</string>
+    <string name="editor_field_step">Tap da (incremento)</string>
+    <string name="editor_field_start">Partenza</string>
+    <string name="editor_field_reverse">Conteggio a rovescia</string>
+    <string name="editor_field_target">Obiettivo (0 = nessun obiettivo)</string>
+    <string name="editor_field_cost">Costo per tap</string>
+    <string name="editor_field_color">Colore TAP</string>
+    <string name="editor_field_image">Immagine TAP (opzionale)</string>
+    <string name="editor_field_periodicity">Periodicità</string>
+    <string name="editor_save_new">Crea contatore</string>
+    <string name="editor_save_edit">Salva modifiche</string>
+
+    <!-- Storico -->
+    <string name="history_title">Storico</string>
+    <string name="history_empty">Nessun TAP registrato</string>
+
+    <!-- Statistiche -->
+    <string name="stats_title">Statistiche</string>
+    <string name="stats_summary">Riepilogo</string>
+    <string name="stats_no_data">Nessun dato per questa granularità.</string>
+    <string name="stats_taps_total">Tap totali</string>
+
+    <!-- Consolida & Reset -->
+    <string name="consolidate_title">Consolida</string>
+    <string name="consolidate_confirm_title">Consolidare il periodo?</string>
+    <string name="consolidate_confirm_text">Verrà salvato lo snapshot corrente e il contatore tornerà al valore di partenza.</string>
+    <string name="reset_title">Reset</string>
+    <string name="reset_confirm_title">Reset storico e statistiche?</string>
+    <string name="reset_confirm_text">Verranno cancellati storico tap e tutti i consolidamenti del contatore. Operazione irreversibile.</string>
+
+    <!-- Daily prompt -->
+    <string name="daily_prompt_title">Consolida il giorno precedente</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Impostazioni</string>
+    <string name="settings_theme">Tema grafico</string>
+    <string name="settings_palette">Palette colori</string>
+    <string name="settings_haptic">Vibrazione al TAP</string>
+    <string name="settings_confirm_decrement">Conferma sotto zero</string>
+    <string name="settings_save">Salva</string>
+    <string name="settings_reset">Ripristina default</string>
+
+    <!-- Comune -->
+    <string name="cancel">Annulla</string>
+    <string name="confirm">Conferma</string>
+    <string name="back">Indietro</string>
+    <string name="delete">Elimina</string>
+
+    <!-- Widget -->
+    <string name="widget_description">Pulsante TAP rapido per il contatore selezionato.</string>
+</resources>
