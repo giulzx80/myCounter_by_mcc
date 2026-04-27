@@ -1,5 +1,6 @@
 package com.mcc.mycounter.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,8 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 /**
- * Card con stile coerente usata per raggruppare sezioni.
- * Identica a quella di MyVote_by_mcc.
+ * Card "flat-dark" stile DexHub: superficie piatta, bordo sottile da 1dp,
+ * radius 12dp, niente elevation. Identica a quella di MyVote_by_mcc per
+ * mantenere coerenza visiva fra le due app.
  */
 @Composable
 fun SectionCard(
@@ -23,14 +25,18 @@ fun SectionCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outline
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(16.dp),
             content = content
         )
     }

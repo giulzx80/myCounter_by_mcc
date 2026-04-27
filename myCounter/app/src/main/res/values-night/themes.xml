@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Tema dark (DexHub): windowBackground #0A0A0A, status/nav trasparenti. -->
     <style name="Theme.MyCounter" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/dex_bg_dark</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar" tools:targetApi="23">false</item>

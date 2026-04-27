@@ -92,7 +92,7 @@ fun CounterEditorScreen(
         mutableStateOf(initial)
     }
     var cost by remember(existing) { mutableStateOf((existing?.costPerTap ?: 0.0).toString()) }
-    var color by remember(existing) { mutableStateOf(existing?.tapColorArgb ?: 0xFF6750A4.toInt()) }
+    var color by remember(existing) { mutableStateOf(existing?.tapColorArgb ?: 0xFF52525B.toInt()) }
     var imageUri by remember(existing) { mutableStateOf(existing?.tapImageUri) }
     var periodicity by remember(existing) {
         mutableStateOf(Periodicity.fromName(existing?.periodicity).name)

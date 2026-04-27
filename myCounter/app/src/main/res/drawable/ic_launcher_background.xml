@@ -4,7 +4,26 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!--
+        Sfondo grigio scuro DexHub-style (#1C1C1C, token "surface-2").
+        Sostituisce il viola Material di default. Una sottile vignette
+        diagonale aggiunge profondità senza tradire l'estetica "flat dark".
+    -->
     <path
-        android:fillColor="#6750A4"
+        android:fillColor="#141414"
         android:pathData="M0,0 L108,0 L108,108 L0,108 Z" />
+    <path
+        android:pathData="M0,0 L108,0 L108,108 L0,108 Z">
+        <aapt:attr xmlns:aapt="http://schemas.android.com/aapt" name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="108"
+                android:endY="108"
+                android:type="linear">
+                <item android:offset="0" android:color="#1F1F1F" />
+                <item android:offset="1" android:color="#0A0A0A" />
+            </gradient>
+        </aapt:attr>
+    </path>
 </vector>

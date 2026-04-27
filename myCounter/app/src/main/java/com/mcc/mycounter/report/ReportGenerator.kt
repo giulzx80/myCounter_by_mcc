@@ -47,7 +47,8 @@ class ReportGenerator(private val context: Context) {
     private val pageHeight = 842
     private val marginX = 40f
     private val marginY = 50f
-    private val brand = AndroidColor.parseColor("#6750A4")
+    // Brand color del PDF di report — grigio scuro DexHub (palette Default).
+    private val brand = AndroidColor.parseColor("#1F2933")
 
     private val titlePaint = Paint().apply {
         color = AndroidColor.BLACK

@@ -84,7 +84,7 @@ class CounterWidget : GlanceAppWidget() {
             prefs[Keys.COUNTER_VALUE] = counter?.currentValue ?: 0L
             prefs[Keys.COUNTER_STEP] = counter?.step ?: 1
             prefs[Keys.COUNTER_REVERSE] = counter?.reverse ?: false
-            prefs[Keys.COUNTER_COLOR] = counter?.tapColorArgb ?: 0xFF6750A4.toInt()
+            prefs[Keys.COUNTER_COLOR] = counter?.tapColorArgb ?: 0xFF52525B.toInt()
             prefs[Keys.COUNTER_TIME_MODE] = counter?.timeMode ?: false
             prefs[Keys.COUNTER_RUNNING] = counter?.runningStartedAt != null
             // Default 0 = nessun flash della sessione appena conclusa.
@@ -104,7 +104,7 @@ class CounterWidget : GlanceAppWidget() {
                 val ctxValue = currentState(Keys.COUNTER_VALUE) ?: 0L
                 val ctxStep = currentState(Keys.COUNTER_STEP) ?: 1
                 val ctxReverse = currentState(Keys.COUNTER_REVERSE) ?: false
-                val ctxColor = currentState(Keys.COUNTER_COLOR) ?: 0xFF6750A4.toInt()
+                val ctxColor = currentState(Keys.COUNTER_COLOR) ?: 0xFF52525B.toInt()
                 val ctxId = currentState(Keys.COUNTER_ID) ?: 0L
                 val ctxTimeMode = currentState(Keys.COUNTER_TIME_MODE) ?: false
                 val ctxRunning = currentState(Keys.COUNTER_RUNNING) ?: false

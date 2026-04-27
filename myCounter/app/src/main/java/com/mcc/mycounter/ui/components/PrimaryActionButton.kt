@@ -14,8 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 /**
- * Bottone principale coerente in tutta l'app.
- * Altezza e padding generosi per una target-area confortevole anche su tablet.
+ * Bottone principale stile DexHub `.dex-btn-primary`:
+ * angoli moderati (8dp), background = primary, testo = onPrimary.
  * Identico a quello di MyVote_by_mcc.
  */
 @Composable
@@ -30,7 +30,7 @@ fun PrimaryActionButton(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 56.dp),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(8.dp),
         enabled = enabled,
         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
         colors = ButtonDefaults.buttonColors(

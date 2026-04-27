@@ -1,11 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Palette di base dell'app, allineata allo stile MyVote_by_mcc -->
-    <color name="brand_primary">#6750A4</color>
-    <color name="brand_secondary">#625B71</color>
-    <color name="brand_tertiary">#7D5260</color>
+    <!-- Palette di base dell'app, allineata al DexHub Suite. -->
+    <color name="brand_primary">#4AA5D0</color>      <!-- DexHub sky -->
+    <color name="brand_secondary">#3786B1</color>    <!-- DexHub sky scuro -->
+    <color name="brand_tertiary">#CFB347</color>     <!-- DexHub gold -->
 
-    <color name="hot_zone">#FFC107</color>
+    <!-- Surface ladder DexHub (dark) -->
+    <color name="dex_bg_dark">#0A0A0A</color>
+    <color name="dex_surface_dark">#141414</color>
+    <color name="dex_surface2_dark">#1C1C1C</color>
+    <color name="dex_border_dark">#2A2A2A</color>
+    <color name="dex_text_dark">#ECECEC</color>
+
+    <!-- Surface ladder DexHub (light) -->
+    <color name="dex_bg_light">#F5F7FA</color>
+    <color name="dex_surface_light">#FFFFFF</color>
+    <color name="dex_text_light">#1F2933</color>
+
+    <color name="hot_zone">#F59E0B</color>
 
     <color name="white">#FFFFFFFF</color>
     <color name="black">#FF000000</color>

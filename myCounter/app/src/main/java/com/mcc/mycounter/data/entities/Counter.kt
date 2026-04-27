@@ -66,7 +66,9 @@ data class Counter(
      *  - In modalità Conta Tempo: costo per MINUTO.
      */
     val costPerTap: Double = 0.0,
-    val tapColorArgb: Int = 0xFF6750A4.toInt(),
+    // Default tap color: grigio scuro DexHub (#52525B), coerente con la
+    // palette "Default" del tema. L'utente può cambiarlo dal CounterEditor.
+    val tapColorArgb: Int = 0xFF52525B.toInt(),
     val tapImageUri: String? = null,
     val periodicity: String = Periodicity.DAILY.name,
     val createdAt: Long = System.currentTimeMillis(),

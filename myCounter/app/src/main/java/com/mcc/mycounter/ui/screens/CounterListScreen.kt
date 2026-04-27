@@ -91,10 +91,17 @@ fun CounterListScreen(
             )
         },
         floatingActionButton = {
+            // containerColor / contentColor espliciti: il default M3 punta a
+            // `primaryContainer` che nel nostro tema ha alpha .16 (per badge/
+            // pillole), e su fondo scuro DexHub si vedrebbe come "riquadro
+            // dentro il bottone" perché lo strato tonal-elevation traspare.
+            // Forziamo il primary opaco, coerente con PrimaryActionButton.
             ExtendedFloatingActionButton(
                 onClick = onCreateNew,
                 icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
-                text = { Text("Nuovo contatore") }
+                text = { Text("Nuovo contatore") },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             )
         }
     ) { inner ->

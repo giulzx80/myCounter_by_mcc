@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Anteprima del widget mostrata nel widget picker. Stilizzazione semplice
-     coerente con il colore brand di myCounter (#6750A4). -->
+<!-- Anteprima del widget mostrata nel widget picker.
+     Stilizzazione DexHub-style: card scura, pulsante TAP grigio neutro. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="180dp"
     android:height="120dp"
     android:viewportWidth="180"
     android:viewportHeight="120">
-    <!-- Sfondo card -->
+    <!-- Sfondo card (DexHub surface light) -->
     <path
-        android:fillColor="#F4EFF6"
+        android:fillColor="#F8FAFC"
         android:pathData="M8,8 L172,8 L172,112 L8,112 Z" />
-    <!-- Pulsante TAP circolare -->
+    <!-- Pulsante TAP circolare (grigio scuro Default) -->
     <path
-        android:fillColor="#6750A4"
+        android:fillColor="#52525B"
         android:pathData="M90,72 m-32,0 a32,32 0 1,0 64,0 a32,32 0 1,0 -64,0" />
     <!-- Etichetta +1 -->
     <path

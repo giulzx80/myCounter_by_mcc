@@ -10,6 +10,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:text="myCounter…"
-        android:textColor="#6750A4"
+        android:textColor="#52525B"
         android:textStyle="bold" />
 </FrameLayout>

@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Tema base: status/navigation bar trasparenti per un look moderno (uguale a MyVote) -->
+    <!--
+        Tema base (light): allineato a DexHub.
+        windowBackground è il colore "splash" mostrato per pochi ms prima
+        che Compose disegni: usiamo lo stesso token "bg" di DexHub per
+        evitare il flash bianco.
+    -->
     <style name="Theme.MyCounter" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/dex_bg_light</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar" tools:targetApi="23">true</item>
