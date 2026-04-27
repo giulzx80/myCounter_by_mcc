@@ -21,8 +21,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import com.mcc.mycounter.ui.components.DexSwitch
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -130,7 +130,7 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.secondary
                             )
                         }
-                        Switch(checked = haptic, onCheckedChange = { haptic = it })
+                        DexSwitch(checked = haptic, onCheckedChange = { haptic = it })
                     }
                     Spacer(Modifier.height(12.dp))
                     Row(
@@ -145,7 +145,7 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.secondary
                             )
                         }
-                        Switch(checked = confirmDec, onCheckedChange = { confirmDec = it })
+                        DexSwitch(checked = confirmDec, onCheckedChange = { confirmDec = it })
                     }
                 }
 
