@@ -14,7 +14,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.mcc.mycounter"
+        applicationId = "com.mccwho.mycounter"
         // minSdk 26 è richiesto dagli <adaptive-icon> nei mipmap (copre Android 8.0+, >99% device)
         minSdk = 26
         targetSdk = 36
@@ -27,15 +27,36 @@ android {
         }
     }
 
+    // IMPORTANTE: signingConfigs deve essere dichiarato PRIMA di buildTypes,
+    // altrimenti buildTypes.release non riesce a referenziare la config "release".
+    signingConfigs {
+        create("release") {
+            storeFile = file(System.getenv("MYCOUNTER_KEYSTORE") ?: "mycounter-release.jks")
+            storePassword = System.getenv("MYCOUNTER_STORE_PASS")
+            keyAlias = "mycounter"
+            keyPassword = System.getenv("MYCOUNTER_KEY_PASS")
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
+            // Inserisce i simboli di debug nativi nell'AAB (per crash leggibili in Play Console).
+            // SYMBOL_TABLE = solo nomi funzione/file/linea (consigliato, AAB più leggero)
+            // FULL = include anche .debug_info/.debug_line (AAB molto più grande)
+            ndk {
+                debugSymbolLevel = "SYMBOL_TABLE"
+            }
         }
     }
+
+
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
