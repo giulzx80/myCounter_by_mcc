@@ -1,0 +1,35 @@
+facciamo una nuova app per android in stile D:\mcc-tools\GitHub\MyVote_by_mcc.
+La cartella per questa app è D:\mcc-tools\GitHub\myCounter_by_mcc — tocca solo questa cartella e usa MyVote per prendere spunto.
+Voglio che tu generi una nuova applicazione Android chiamata myCounter by MCC.
+Layout e stile
+Stesso layout, pattern, stile grafico, struttura schermate, navigazione e temi di MyVote: stessi pulsanti, schermate, gestione temi (chiaro/scuro/colori), pattern di navigazione, organizzazione menu impostazioni, componenti riutilizzabili.
+Obiettivo
+App per creare e gestire contatori personalizzati. Ogni contatore è un'istanza configurabile.
+All'apertura mostrare direttamente la schermata TAP con l'ultimo contatore selezionato.
+Funzionalità
+
+Contatori multipli — l'utente può crearne più di uno.
+Configurazione di ogni contatore:
+
+Nome (es. "Conta Sigarette")
+Tap da (incremento/decremento per tap, configurabile)
+Partenza (valore iniziale)
+Conteggio a rovescia (boolean: true=decrementa)
+Obiettivo giornaliero (con "zona calda" + messaggio "Obiettivo raggiunto")
+Costo per Tap (mostra totale = contatore * costo_per_tap)
+Colore Tap, Immagine Tap (personalizzabili)
+Periodicità: Giornaliera / Mensile / Annuale (giornaliera → consolidamento del giorno precedente all'apertura)
+
+
+Schermata TAP: pulsante centrale grande, valore corrente, zona calda, accesso rapido a Impostazioni / Configuratore / Storico / Statistiche.
+Storico: tutti i tap con data/ora, valore prima/dopo, note.
+Statistiche: grafico (line/bar) con andamento giornaliero/mensile/annuale, progresso obiettivo, totale costi.
+Consolida: salva chiusura del periodo, azzera contatore, statistiche da quel punto, storico consultabile.
+Reset (cancella storico+statistiche, solo dopo consolidamento).
+Configuratore contatori (lista, seleziona, modifica, duplica, crea, elimina) in stile MyVote.
+Widget dinamico: pulsante TAP + icona app (apre Statistiche+Storico del contatore collegato), aggiornamento dinamico.
+
+Struttura del progetto
+Struttura completa Android, Kotlin (preferibile), layout XML, ViewModel + Repository + Room, grafici (MPAndroidChart o Compose Charts), gestione temi, widget, logica di consolidamento e periodicità, schermate complete, navigation graph, icone/risorse placeholder, esempi di dati, test di base.
+Output
+Struttura completa, codice sorgente, file XML, Room database, gestione widget, gestione statistiche/storico, istruzioni di build, istruzioni per nuovi contatori, suggerimenti per miglioramenti futuri. App completamente funzionante e compilabile.
