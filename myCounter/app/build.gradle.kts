@@ -18,8 +18,8 @@ android {
         // minSdk 26 è richiesto dagli <adaptive-icon> nei mipmap (copre Android 8.0+, >99% device)
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
