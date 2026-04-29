@@ -66,6 +66,13 @@ class TapWidgetAction : ActionCallback {
         }
         if (counterId <= 0) return
 
+        // Auto-consolidamento PRIMA del tap: se è cambiato il giorno (DAILY) o
+        // la settimana (WEEKLY), azzera silenziosamente. Così il TAP fatto al
+        // mattino dopo mezzanotte parte da 0 invece di sommarsi al totale di ieri.
+        withContext(Dispatchers.IO) {
+            app.repository.autoConsolidateIfNeeded(counterId)
+        }
+
         // Stato PRIMA del tap: serve per capire se questo tap è uno STOP del timer.
         val before = withContext(Dispatchers.IO) { app.repository.getById(counterId) }
         val wasRunning = before?.timeMode == true && before.runningStartedAt != null
@@ -74,6 +81,17 @@ class TapWidgetAction : ActionCallback {
         val updated = withContext(Dispatchers.IO) {
             app.repository.applyTap(counterId, fromWidget = true)
         } ?: return
+
+        // 1.b Hot-zone notification (transizione a HOT_ZONE o FAILURE)
+        runCatching {
+            val wasHot = before?.isInHotZone() == true ||
+                    before?.computeGoalState() == com.mcc.mycounter.data.entities.GoalState.FAILURE
+            val isHotNow = updated.isInHotZone() ||
+                    updated.computeGoalState() == com.mcc.mycounter.data.entities.GoalState.FAILURE
+            if (!wasHot && isHotNow) {
+                com.mcc.mycounter.notify.NotificationHelper.showHotZone(context, updated)
+            }
+        }
 
         val isStopTransition = wasRunning && updated.runningStartedAt == null && updated.timeMode
         val isStartTransition = !wasRunning && updated.runningStartedAt != null && updated.timeMode

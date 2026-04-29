@@ -1,6 +1,7 @@
 package com.mcc.mycounter.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mcc.mycounter.data.entities.Consolidation
 import com.mcc.mycounter.data.entities.Counter
@@ -39,9 +40,13 @@ data class CounterUiState(
  */
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class CounterViewModel(
+    application: Application,
     private val repository: CounterRepository,
     private val settings: SettingsManager
-) : ViewModel() {
+) : AndroidViewModel(application) {
+
+    /** Application context (per notifiche, intent email, ecc.). */
+    private val appContext: android.content.Context get() = getApplication()
 
     /** Id del contatore selezionato. -1 = non c'è selezione (verrà calcolata). */
     private val selectedCounterId = MutableStateFlow(-1L)
@@ -125,17 +130,31 @@ class CounterViewModel(
     }
 
     private suspend fun checkDailyPrompt(id: Long) {
-        val should = withContext(Dispatchers.IO) {
-            repository.shouldPromptPeriodConsolidation(id)
-        }
-        _uiState.value = _uiState.value.copy(pendingDailyConsolidation = should)
+        // Auto-consolidamento silenzioso del periodo precedente se necessario:
+        // così "Conta Caffè" giornaliero appare già a 0 al primo accesso del
+        // giorno successivo, senza chiedere conferma.
+        withContext(Dispatchers.IO) { repository.autoConsolidateIfNeeded(id) }
+        // Niente prompt (è già stato consolidato silenziosamente).
+        _uiState.value = _uiState.value.copy(pendingDailyConsolidation = false)
     }
 
     /** Tap sul pulsante principale (incremento o decremento, in base a reverse). */
     fun tap() {
         val id = selectedCounterId.value
         if (id <= 0) return
-        viewModelScope.launch(Dispatchers.IO) { repository.applyTap(id) }
+        viewModelScope.launch(Dispatchers.IO) {
+            val before = repository.getById(id)
+            val updated = repository.applyTap(id) ?: return@launch
+            // Hot-zone alert: se PRIMA del tap eravamo sotto la zona calda e ORA
+            // siamo dentro (o abbiamo appena sforato un LIMIT), notifichiamo.
+            val wasHot = before?.isInHotZone() == true ||
+                    before?.computeGoalState() == com.mcc.mycounter.data.entities.GoalState.FAILURE
+            val isHotNow = updated.isInHotZone() ||
+                    updated.computeGoalState() == com.mcc.mycounter.data.entities.GoalState.FAILURE
+            if (!wasHot && isHotNow) {
+                com.mcc.mycounter.notify.NotificationHelper.showHotZone(appContext, updated)
+            }
+        }
     }
 
     /** Tap manuale: applica una variazione esplicita (es. -1 per Undo). */
@@ -156,12 +175,29 @@ class CounterViewModel(
         val id = selectedCounterId.value
         if (id <= 0) return
         viewModelScope.launch {
-            val c = withContext(Dispatchers.IO) { repository.consolidate(id) }
+            val pair = withContext(Dispatchers.IO) {
+                repository.consolidateWithAchievement(id)
+            }
+            val cons = pair?.first
+            val ach = pair?.second
+            // Notifica esito + (se configurato) bozza-mail accountability + webhook.
+            if (cons != null && ach != null) {
+                val counter = withContext(Dispatchers.IO) { repository.getById(id) }
+                if (counter != null) {
+                    com.mcc.mycounter.notify.NotificationHelper.showOutcome(appContext, counter, ach)
+                    val s = settings.settingsFlow.first()
+                    if (s.accountabilityEmailEnabled) {
+                        com.mcc.mycounter.notify.AccountabilityMailer.sendIfConfigured(appContext, counter, ach)
+                    }
+                    val app = appContext.applicationContext as com.mcc.mycounter.MyCounterApplication
+                    com.mcc.mycounter.notify.WebhookSender.sendIfEnabled(app, counter, ach)
+                }
+            }
             _uiState.value = _uiState.value.copy(
                 pendingDailyConsolidation = false,
-                message = c?.let { "Periodo consolidato. Counter azzerato." }
+                message = cons?.let { "Periodo consolidato. Counter azzerato." }
             )
-            onDone(c)
+            onDone(cons)
         }
     }
 

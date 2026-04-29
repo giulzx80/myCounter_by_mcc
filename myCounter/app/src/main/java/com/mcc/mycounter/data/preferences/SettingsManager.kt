@@ -26,7 +26,26 @@ data class UserSettings(
     val paletteName: String = "default",
     val hapticFeedback: Boolean = true,
     val confirmDecrement: Boolean = false,
-    val selectedCounterId: Long = -1L
+    val selectedCounterId: Long = -1L,
+    /**
+     * Master switch per l'invio della bozza-mail "accountability" a fine periodo
+     * (per i counter che hanno [com.mcc.mycounter.data.entities.Counter.accountabilityEmail]
+     * valorizzato). Default ON.
+     */
+    val accountabilityEmailEnabled: Boolean = true,
+    /**
+     * Webhook globale: se true, dopo OGNI consolidamento l'app fa un POST JSON
+     * all'URL configurato. Default OFF.
+     */
+    val webhookEnabled: Boolean = false,
+    /** URL completo (https://...) dell'endpoint webhook. */
+    val webhookUrl: String = "",
+    /**
+     * Secret opzionale: se valorizzato l'app firma il body con HMAC-SHA256 e
+     * lo invia nell'header `X-myCounter-Signature` per consentire la
+     * verifica server-side dell'autenticità.
+     */
+    val webhookSecret: String = ""
 )
 
 /**
@@ -41,6 +60,10 @@ class SettingsManager(private val context: Context) {
         val HAPTIC = booleanPreferencesKey("haptic_feedback")
         val CONFIRM_DEC = booleanPreferencesKey("confirm_decrement")
         val SELECTED_COUNTER = longPreferencesKey("selected_counter_id")
+        val ACCOUNTABILITY_EMAIL_ENABLED = booleanPreferencesKey("accountability_email_enabled")
+        val WEBHOOK_ENABLED = booleanPreferencesKey("webhook_enabled")
+        val WEBHOOK_URL = stringPreferencesKey("webhook_url")
+        val WEBHOOK_SECRET = stringPreferencesKey("webhook_secret")
     }
 
     val settingsFlow: Flow<UserSettings> = context.dataStore.data.map { prefs ->
@@ -49,7 +72,11 @@ class SettingsManager(private val context: Context) {
             paletteName = prefs[Keys.PALETTE] ?: "default",
             hapticFeedback = prefs[Keys.HAPTIC] ?: true,
             confirmDecrement = prefs[Keys.CONFIRM_DEC] ?: false,
-            selectedCounterId = prefs[Keys.SELECTED_COUNTER] ?: -1L
+            selectedCounterId = prefs[Keys.SELECTED_COUNTER] ?: -1L,
+            accountabilityEmailEnabled = prefs[Keys.ACCOUNTABILITY_EMAIL_ENABLED] ?: true,
+            webhookEnabled = prefs[Keys.WEBHOOK_ENABLED] ?: false,
+            webhookUrl = prefs[Keys.WEBHOOK_URL] ?: "",
+            webhookSecret = prefs[Keys.WEBHOOK_SECRET] ?: ""
         )
     }
 
@@ -70,6 +97,18 @@ class SettingsManager(private val context: Context) {
 
     suspend fun updateSelectedCounter(id: Long) {
         context.dataStore.edit { it[Keys.SELECTED_COUNTER] = id }
+    }
+
+    suspend fun updateAccountabilityEmailEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[Keys.ACCOUNTABILITY_EMAIL_ENABLED] = enabled }
+    }
+
+    suspend fun updateWebhook(enabled: Boolean, url: String, secret: String) {
+        context.dataStore.edit {
+            it[Keys.WEBHOOK_ENABLED] = enabled
+            it[Keys.WEBHOOK_URL] = url
+            it[Keys.WEBHOOK_SECRET] = secret
+        }
     }
 
     suspend fun reset() {

@@ -14,7 +14,7 @@ class ViewModelFactory(private val app: MyCounterApplication) : ViewModelProvide
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return when {
             modelClass.isAssignableFrom(CounterViewModel::class.java) ->
-                CounterViewModel(app.repository, app.settingsManager) as T
+                CounterViewModel(app, app.repository, app.settingsManager) as T
             modelClass.isAssignableFrom(SettingsViewModel::class.java) ->
                 SettingsViewModel(app.settingsManager) as T
             else -> throw IllegalArgumentException("ViewModel sconosciuto: ${modelClass.name}")

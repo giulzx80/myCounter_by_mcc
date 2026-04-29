@@ -5,6 +5,13 @@
     <!-- Lettura dell'immagine custom da impostare sul pulsante TAP -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
+    <!-- Notifiche (Android 13+ richiede opt-in runtime) per: hot zone alert,
+         reminder giornaliero, esito consolidamento. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Webhook: per inviare il POST HTTP all'endpoint configurato. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".MyCounterApplication"
         android:allowBackup="true"

@@ -44,11 +44,28 @@ class MainActivity : ComponentActivity() {
         ViewModelFactory(application as MyCounterApplication)
     }
 
+    companion object {
+        private const val REQ_NOTIFICATIONS = 1001
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // Edge-to-edge: l'UI usa l'intera area schermo, coerente con il look "moderno"
         WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        // Android 13+ richiede di chiedere a runtime il permesso per le notifiche.
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            val granted = androidx.core.content.ContextCompat.checkSelfPermission(
+                this, android.Manifest.permission.POST_NOTIFICATIONS
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            if (!granted) {
+                requestPermissions(
+                    arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                    REQ_NOTIFICATIONS
+                )
+            }
+        }
 
         setContent {
             val settings by settingsViewModel.settings.collectAsState()

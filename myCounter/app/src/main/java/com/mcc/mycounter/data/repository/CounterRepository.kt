@@ -1,8 +1,11 @@
 package com.mcc.mycounter.data.repository
 
 import com.mcc.mycounter.data.AppDatabase
+import com.mcc.mycounter.data.entities.Achievement
 import com.mcc.mycounter.data.entities.Consolidation
 import com.mcc.mycounter.data.entities.Counter
+import com.mcc.mycounter.data.entities.GoalState
+import com.mcc.mycounter.data.entities.GoalType
 import com.mcc.mycounter.data.entities.Periodicity
 import com.mcc.mycounter.data.entities.TapEvent
 import kotlinx.coroutines.flow.Flow
@@ -21,6 +24,7 @@ class CounterRepository(private val db: AppDatabase) {
     private val counterDao get() = db.counterDao()
     private val tapDao get() = db.tapEventDao()
     private val consolidationDao get() = db.consolidationDao()
+    private val achievementDao get() = db.achievementDao()
 
     // ---- Counter CRUD ----
 
@@ -199,7 +203,10 @@ class CounterRepository(private val db: AppDatabase) {
     // ---- Consolida ----
 
     /**
-     * Consolida il periodo corrente: salva uno snapshot e azzera il valore.
+     * Consolida il periodo corrente: salva uno snapshot, calcola
+     * l'esito (Achievement) rispetto all'obiettivo, azzera il valore.
+     *
+     * Restituisce la Consolidation creata (oppure null se il counter non esiste).
      */
     suspend fun consolidate(counterId: Long): Consolidation? {
         val counter = counterDao.getById(counterId) ?: return null
@@ -213,14 +220,82 @@ class CounterRepository(private val db: AppDatabase) {
             finalValue = counter.currentValue,
             tapsCount = taps,
             totalCost = counter.totalCost(),
-            targetReached = counter.isTargetReached(),
+            targetReached = counter.isPositiveOutcome(),
             periodStartedAt = periodStart,
             periodEndedAt = now,
             periodicity = counter.periodicity
         )
-        val id = consolidationDao.insert(consolidation)
+        val consolidationId = consolidationDao.insert(consolidation)
+
+        // Calcola e salva l'achievement collegato.
+        createAchievementForConsolidation(counter, consolidationId, now)
+
         counterDao.applyConsolidationReset(counterId, counter.startValue, now)
-        return consolidation.copy(id = id)
+        return consolidation.copy(id = consolidationId)
+    }
+
+    /**
+     * Crea un [Achievement] per il consolidamento appena fatto, calcolando
+     * outcome e streak. Pubblico così le notifiche/email possono leggerlo.
+     */
+    suspend fun createAchievementForConsolidation(
+        counter: Counter,
+        consolidationId: Long,
+        endedAt: Long
+    ): Achievement {
+        val goalTypeEnum = counter.goalTypeEnum()
+        val outcome: Achievement.Outcome = when {
+            goalTypeEnum == GoalType.NONE || counter.dailyTarget <= 0 -> Achievement.Outcome.NEUTRAL
+            goalTypeEnum == GoalType.TARGET ->
+                if (counter.currentValue >= counter.dailyTarget) Achievement.Outcome.SUCCESS
+                else Achievement.Outcome.FAILURE
+            goalTypeEnum == GoalType.LIMIT ->
+                if (counter.currentValue <= counter.dailyTarget) Achievement.Outcome.SUCCESS
+                else Achievement.Outcome.FAILURE
+            else -> Achievement.Outcome.NEUTRAL
+        }
+
+        // Streak corrente: se SUCCESS, +1 alla streak precedente; altrimenti reset a 0.
+        val previous = achievementDao.lastForCounter(counter.id)
+        val previousStreak = previous?.streak ?: 0
+        val newStreak = when (outcome) {
+            Achievement.Outcome.SUCCESS -> previousStreak + 1
+            Achievement.Outcome.FAILURE -> 0
+            Achievement.Outcome.NEUTRAL -> previousStreak  // mantieni
+        }
+
+        val ach = Achievement(
+            counterId = counter.id,
+            consolidationId = consolidationId,
+            periodEndedAt = endedAt,
+            outcome = outcome.name,
+            goalType = counter.goalType,
+            finalValue = counter.currentValue,
+            targetValue = counter.dailyTarget,
+            streak = newStreak
+        )
+        val id = achievementDao.insert(ach)
+        return ach.copy(id = id)
+    }
+
+    fun observeAchievements(counterId: Long): Flow<List<Achievement>> =
+        achievementDao.observeForCounter(counterId)
+
+    suspend fun lastAchievement(counterId: Long): Achievement? =
+        achievementDao.lastForCounter(counterId)
+
+    suspend fun lastNAchievements(counterId: Long, n: Int): List<Achievement> =
+        achievementDao.lastNForCounter(counterId, n)
+
+    /**
+     * Consolida e ritorna sia la Consolidation appena creata sia l'Achievement
+     * collegato. Usato dai chiamanti che vogliono mostrare una notifica/email
+     * con l'esito subito dopo il consolidamento.
+     */
+    suspend fun consolidateWithAchievement(counterId: Long): Pair<Consolidation, Achievement>? {
+        val cons = consolidate(counterId) ?: return null
+        val ach = achievementDao.lastForCounter(counterId) ?: return null
+        return cons to ach
     }
 
     /**
@@ -232,6 +307,7 @@ class CounterRepository(private val db: AppDatabase) {
         // Esiste almeno un consolidamento → reset OK
         tapDao.deleteAllForCounter(counterId)
         consolidationDao.deleteAllForCounter(counterId)
+        achievementDao.deleteAllForCounter(counterId)
         // Lasciamo il counter intatto (valore corrente, target, costi, ecc.)
         // ma puliamo lastConsolidatedAt — il next periodo riparte da "ora".
         val counter = counterDao.getById(counterId) ?: return true
@@ -285,6 +361,62 @@ class CounterRepository(private val db: AppDatabase) {
     )
     suspend fun shouldPromptDailyConsolidation(counterId: Long): Boolean =
         shouldPromptPeriodConsolidation(counterId)
+
+    /**
+     * AUTO-CONSOLIDAMENTO silenzioso: se il counter è DAILY/WEEKLY e il periodo
+     * corrente è cambiato rispetto a quello dell'ultimo consolidamento (o
+     * della creazione se non c'è stato nessun consolidamento ancora) E ci sono
+     * dati da consolidare, esegue [consolidate] senza chiedere conferma.
+     *
+     * Viene chiamata:
+     *  - all'avvio dell'app
+     *  - ad ogni refresh del widget
+     *  - ad ogni TAP del widget
+     * così che, ad esempio, un counter "Conta Caffè" giornaliero appare a 0
+     * al primo accesso del giorno successivo, senza azione manuale.
+     *
+     * Skippa il consolidamento se:
+     *  - la periodicità è MONTHLY/YEARLY (non c'è auto-reset per quelle)
+     *  - il valore corrente == startValue (niente da consolidare)
+     *  - il counter è in modalità Conta Tempo CON timer in esecuzione
+     *    (non vogliamo perdere la sessione attiva)
+     */
+    suspend fun autoConsolidateIfNeeded(counterId: Long): Consolidation? {
+        val counter = counterDao.getById(counterId) ?: return null
+        val periodicity = Periodicity.fromName(counter.periodicity)
+        if (periodicity != Periodicity.DAILY && periodicity != Periodicity.WEEKLY) return null
+        if (counter.currentValue == counter.startValue) return null
+        if (counter.timeMode && counter.runningStartedAt != null) return null
+
+        val periodBoundary = when (periodicity) {
+            Periodicity.DAILY -> startOfToday()
+            Periodicity.WEEKLY -> startOfThisWeekMonday()
+            else -> return null
+        }
+        val lastRef = counter.lastConsolidatedAt ?: counter.createdAt
+        if (lastRef >= periodBoundary) return null
+
+        return consolidate(counterId)
+    }
+
+    /** Esegue [autoConsolidateIfNeeded] su TUTTI i counter. Ritorna quanti azzerati. */
+    suspend fun autoConsolidateAllIfNeeded(): Int {
+        var count = 0
+        counterDao.getAll().forEach { c ->
+            if (autoConsolidateIfNeeded(c.id) != null) count++
+        }
+        return count
+    }
+
+    /**
+     * Come [autoConsolidateIfNeeded] ma ritorna anche l'Achievement creato.
+     * Utile ai chiamanti che vogliono mostrare notifica/email subito dopo.
+     */
+    suspend fun autoConsolidateIfNeededWithAchievement(counterId: Long): Pair<Consolidation, Achievement>? {
+        val cons = autoConsolidateIfNeeded(counterId) ?: return null
+        val ach = achievementDao.lastForCounter(counterId) ?: return null
+        return cons to ach
+    }
 
     private fun startOfToday(): Long = Calendar.getInstance().apply {
         timeInMillis = System.currentTimeMillis()

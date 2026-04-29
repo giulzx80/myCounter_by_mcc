@@ -292,15 +292,34 @@ fun TapScreen(
                         },
                         iconRes = buttonIcon
                     )
+                    val state = counter.computeGoalState()
+                    val goalTypeEnum = counter.goalTypeEnum()
+                    val (badgeText, badgeColor) = when {
+                        state == com.mcc.mycounter.data.entities.GoalState.SUCCESS &&
+                                goalTypeEnum == com.mcc.mycounter.data.entities.GoalType.TARGET ->
+                            "🏆 Obiettivo raggiunto" to MaterialTheme.colorScheme.tertiary
+                        state == com.mcc.mycounter.data.entities.GoalState.SUCCESS &&
+                                goalTypeEnum == com.mcc.mycounter.data.entities.GoalType.LIMIT ->
+                            "✓ Sotto il limite" to MaterialTheme.colorScheme.tertiary
+                        state == com.mcc.mycounter.data.entities.GoalState.FAILURE ->
+                            "⚠ Limite superato" to MaterialTheme.colorScheme.error
+                        state == com.mcc.mycounter.data.entities.GoalState.HOT_ZONE &&
+                                goalTypeEnum == com.mcc.mycounter.data.entities.GoalType.LIMIT ->
+                            "Attenzione: vicino al limite" to MaterialTheme.colorScheme.error
+                        state == com.mcc.mycounter.data.entities.GoalState.HOT_ZONE &&
+                                goalTypeEnum == com.mcc.mycounter.data.entities.GoalType.TARGET ->
+                            "Ci sei quasi!" to MaterialTheme.colorScheme.tertiary
+                        else -> null to MaterialTheme.colorScheme.primary
+                    }
                     AnimatedVisibility(
-                        visible = counter.isTargetReached(),
+                        visible = badgeText != null,
                         enter = fadeIn(),
                         exit = fadeOut()
                     ) {
                         Text(
-                            "Obiettivo raggiunto",
+                            text = badgeText.orEmpty(),
                             style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.tertiary,
+                            color = badgeColor,
                             fontWeight = FontWeight.Bold
                         )
                     }

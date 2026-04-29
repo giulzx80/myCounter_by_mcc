@@ -77,6 +77,12 @@ class CounterWidget : GlanceAppWidget() {
         val fallbackId = app.settingsManager.settingsFlow.first().selectedCounterId
         val counterId = boundCounterId ?: fallbackId
 
+        // Auto-consolidamento: se il counter è giornaliero/settimanale e siamo
+        // in un nuovo periodo, azzera silenziosamente PRIMA di leggerlo per il
+        // display. In questo modo il widget mostra subito il valore "del giorno"
+        // anche al primo refresh dopo mezzanotte.
+        if (counterId > 0) app.repository.autoConsolidateIfNeeded(counterId)
+
         val counter = if (counterId > 0) app.repository.getById(counterId) else null
         updateAppWidgetState(context, id) { prefs ->
             prefs[Keys.COUNTER_ID] = counter?.id ?: 0L

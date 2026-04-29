@@ -9,6 +9,7 @@ import com.mcc.mycounter.data.repository.CounterRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -30,6 +31,48 @@ class MyCounterApplication : Application() {
         super.onCreate()
         seedSampleDataIfEmpty()
         resumeBlinkerIfTimerRunning()
+        autoConsolidateAtStartup()
+        // Notifiche
+        com.mcc.mycounter.notify.NotificationHelper.ensureChannel(this)
+        com.mcc.mycounter.notify.DailyReminderWorker.schedule(this)
+    }
+
+    /**
+     * All'avvio dell'app, controlla TUTTI i counter DAILY/WEEKLY e se è
+     * passato il confine di periodo dall'ultimo consolidamento esegue il
+     * consolidamento silenzioso (snapshot + reset). Per ogni counter
+     * consolidato: notifica esito + eventuale bozza-mail.
+     */
+    private fun autoConsolidateAtStartup() {
+        appScope.launch {
+            // Itera manualmente così possiamo intercettare ogni consolidamento.
+            val toCheck = repository.getAll()
+            var anyReset = false
+            toCheck.forEach { c ->
+                val pair = repository.autoConsolidateIfNeededWithAchievement(c.id)
+                if (pair != null) {
+                    anyReset = true
+                    val freshCounter = repository.getById(c.id) ?: c
+                    com.mcc.mycounter.notify.NotificationHelper.showOutcome(
+                        this@MyCounterApplication, freshCounter, pair.second
+                    )
+                    // Email accountability — solo se attiva da impostazioni
+                    val s = settingsManager.settingsFlow.first()
+                    if (s.accountabilityEmailEnabled) {
+                        com.mcc.mycounter.notify.AccountabilityMailer.sendIfConfigured(
+                            this@MyCounterApplication, freshCounter, pair.second
+                        )
+                    }
+                    // Webhook (Step E) — sempre se attivo nelle impostazioni
+                    com.mcc.mycounter.notify.WebhookSender.sendIfEnabled(
+                        this@MyCounterApplication, freshCounter, pair.second
+                    )
+                }
+            }
+            if (anyReset) {
+                com.mcc.mycounter.widget.WidgetUpdater.requestUpdateAll(this@MyCounterApplication)
+            }
+        }
     }
 
     /**

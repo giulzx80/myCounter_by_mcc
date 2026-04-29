@@ -20,10 +20,22 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import com.mcc.mycounter.ui.components.DexSwitch
 import androidx.compose.material3.TopAppBar
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -56,6 +68,15 @@ fun SettingsScreen(
     var palette by remember(current.paletteName) { mutableStateOf(current.paletteName) }
     var haptic by remember(current.hapticFeedback) { mutableStateOf(current.hapticFeedback) }
     var confirmDec by remember(current.confirmDecrement) { mutableStateOf(current.confirmDecrement) }
+    var emailAccEnabled by remember(current.accountabilityEmailEnabled) {
+        mutableStateOf(current.accountabilityEmailEnabled)
+    }
+    var webhookEnabled by remember(current.webhookEnabled) { mutableStateOf(current.webhookEnabled) }
+    var webhookUrl by remember(current.webhookUrl) { mutableStateOf(current.webhookUrl) }
+    var webhookSecret by remember(current.webhookSecret) { mutableStateOf(current.webhookSecret) }
+    var testMessage by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -149,12 +170,170 @@ fun SettingsScreen(
                     }
                 }
 
+                // ===== Accountability email (master switch) =====
+                SectionCard {
+                    Text("Accountability via email", style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Invia bozza-mail al coach", style = MaterialTheme.typography.bodyLarge)
+                            Text(
+                                "A fine periodo, per ogni counter con email coach configurata, " +
+                                        "prepara una bozza-mail con il PDF di riepilogo. Tu confermi e invii.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                        }
+                        DexSwitch(checked = emailAccEnabled, onCheckedChange = { emailAccEnabled = it })
+                    }
+                }
+
+                // ===== Webhook (Step E) =====
+                SectionCard {
+                    Text("Webhook (integrazione esterna)", style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Abilita webhook", style = MaterialTheme.typography.bodyLarge)
+                            Text(
+                                "A fine periodo l'app fa una POST JSON al tuo endpoint con il dettaglio " +
+                                        "del consolidamento. Utile per Zapier, n8n, IFTTT, server custom.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                        }
+                        DexSwitch(checked = webhookEnabled, onCheckedChange = { webhookEnabled = it })
+                    }
+                    if (webhookEnabled) {
+                        Spacer(Modifier.height(12.dp))
+                        OutlinedTextField(
+                            value = webhookUrl,
+                            onValueChange = { webhookUrl = it },
+                            label = { Text("URL endpoint (https://…)") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = webhookSecret,
+                            onValueChange = { webhookSecret = it },
+                            label = { Text("Secret HMAC (opzionale)") },
+                            singleLine = true,
+                            visualTransformation = PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        TextButton(onClick = {
+                            scope.launch {
+                                val ok = withContext(Dispatchers.IO) {
+                                    com.mcc.mycounter.notify.WebhookSender.sendTestPing(
+                                        webhookUrl, webhookSecret
+                                    )
+                                }
+                                testMessage = if (ok) "✓ Test inviato con successo (HTTP 2xx)"
+                                else "✗ Test fallito (verifica URL e connessione)"
+                                snackbarHostState.showSnackbar(testMessage!!)
+                            }
+                        }) { Text("Invia ping di test") }
+
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            "Come configurare il tuo endpoint",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "Il tuo server riceverà una POST con queste caratteristiche:",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "• Method: POST\n" +
+                                    "• Content-Type: application/json; charset=UTF-8\n" +
+                                    "• User-Agent: myCounter-by-MCC/1.0\n" +
+                                    "• X-myCounter-Signature: hex(HMAC-SHA256(body, secret)) [se secret è impostato]",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "Esempio di payload:",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        SectionCard {
+                            Text(
+                                """
+{
+  "event": "consolidation",
+  "timestamp": 1719753600000,
+  "counter": {
+    "id": 1,
+    "name": "Conta Caffè",
+    "goalType": "LIMIT",
+    "periodicity": "DAILY",
+    "timeMode": false,
+    "startValue": 0,
+    "target": 3,
+    "finalValue": 4,
+    "totalCost": 4.80,
+    "currency": "EUR"
+  },
+  "achievement": {
+    "outcome": "FAILURE",
+    "streak": 0,
+    "consolidationId": 42,
+    "periodEndedAt": 1719753600000
+  }
+}
+                                """.trim(),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "Verifica server-side della firma (pseudo-codice):",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                        Text(
+                            "expected = hex(HMAC_SHA256(rawBody, secret))\n" +
+                                    "if (expected != header['X-myCounter-Signature']) reject",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "Compatibile con: Zapier (Catch Hook), n8n (Webhook node), IFTTT " +
+                                    "(Webhooks service), Make.com, server self-hosted.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "Note: best-effort, niente retry. Il consolidamento resta comunque " +
+                                    "salvato in locale anche se la POST fallisce.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    }
+                }
+
                 PrimaryActionButton(
                     text = "Salva",
                     onClick = {
                         settingsViewModel.updateTheme(themeMode, palette)
                         settingsViewModel.updateHaptic(haptic)
                         settingsViewModel.updateConfirmDecrement(confirmDec)
+                        settingsViewModel.updateAccountabilityEmailEnabled(emailAccEnabled)
+                        settingsViewModel.updateWebhook(webhookEnabled, webhookUrl, webhookSecret)
                     }
                 )
                 OutlinedButton(

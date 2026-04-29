@@ -120,6 +120,9 @@ dependencies {
     implementation("androidx.glance:glance-appwidget:$glanceVersion")
     implementation("androidx.glance:glance-material3:$glanceVersion")
 
+    // WorkManager — per il reminder giornaliero programmato
+    implementation("androidx.work:work-runtime-ktx:2.10.0")
+
     // MPAndroidChart per le statistiche (disponibile da JitPack)
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 

@@ -96,9 +96,13 @@ fun StatsScreen(
 
     var granularity by remember { mutableStateOf(Granularity.DAILY) }
     var allTaps by remember(counter?.id, state.history) { mutableStateOf<List<TapEvent>>(emptyList()) }
+    var lastAchievement by remember(counter?.id) {
+        mutableStateOf<com.mcc.mycounter.data.entities.Achievement?>(null)
+    }
     LaunchedEffect(counter?.id, state.history) {
         val id = counter?.id ?: return@LaunchedEffect
         allTaps = app.repository.allTaps(id)
+        lastAchievement = app.repository.lastAchievement(id)
     }
 
     // Stato del dialog "Report"
@@ -243,6 +247,31 @@ fun StatsScreen(
                             Text(
                                 "Totale costi periodo corrente: ${counter.totalCost().formatCurrency()}",
                                 style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
+
+                // Streak & ultimo esito
+                lastAchievement?.let { ach ->
+                    SectionCard {
+                        Text("Streak & ultimo esito", style = MaterialTheme.typography.titleMedium)
+                        Spacer(Modifier.height(8.dp))
+                        val outcomeLabel = when (ach.outcomeEnum()) {
+                            com.mcc.mycounter.data.entities.Achievement.Outcome.SUCCESS -> "🏆 SUCCESSO"
+                            com.mcc.mycounter.data.entities.Achievement.Outcome.FAILURE -> "⚠ MANCATO"
+                            com.mcc.mycounter.data.entities.Achievement.Outcome.NEUTRAL -> "—"
+                        }
+                        Text(
+                            "Ultimo periodo: $outcomeLabel " +
+                                    "(${ach.finalValue}/${ach.targetValue})",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        if (ach.streak > 0) {
+                            Text(
+                                "Streak corrente: ${ach.streak} di fila 🔥",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.tertiary
                             )
                         }
                     }

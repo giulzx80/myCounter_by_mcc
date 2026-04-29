@@ -8,6 +8,7 @@ import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import com.mcc.mycounter.data.entities.Consolidation
 import com.mcc.mycounter.data.entities.Counter
+import com.mcc.mycounter.data.entities.GoalType
 import com.mcc.mycounter.data.entities.Periodicity
 import com.mcc.mycounter.data.entities.TapEvent
 import com.mcc.mycounter.ui.util.formatCurrency
@@ -165,6 +166,15 @@ class ReportGenerator(private val context: Context) {
             Periodicity.YEARLY -> "Annuale"
         }
         drawText("Periodicità: $periodicityLabel", bodyPaint)
+        val goalLabel = when (counter.goalTypeEnum()) {
+            GoalType.TARGET -> "Traguardo (raggiungere)"
+            GoalType.LIMIT -> "Limite (non superare)"
+            GoalType.NONE -> "Nessuno"
+        }
+        drawText("Tipo obiettivo: $goalLabel", bodyPaint)
+        if (!counter.accountabilityEmail.isNullOrBlank()) {
+            drawText("Accountability email: ${counter.accountabilityEmail}", bodyPaint)
+        }
         rule()
 
         // ---- Statistiche ----

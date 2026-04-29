@@ -32,5 +32,13 @@ class SettingsViewModel(private val manager: SettingsManager) : ViewModel() {
         manager.updateConfirmDecrement(enabled)
     }
 
+    fun updateAccountabilityEmailEnabled(enabled: Boolean) = viewModelScope.launch {
+        manager.updateAccountabilityEmailEnabled(enabled)
+    }
+
+    fun updateWebhook(enabled: Boolean, url: String, secret: String) = viewModelScope.launch {
+        manager.updateWebhook(enabled, url.trim(), secret.trim())
+    }
+
     fun reset() = viewModelScope.launch { manager.reset() }
 }

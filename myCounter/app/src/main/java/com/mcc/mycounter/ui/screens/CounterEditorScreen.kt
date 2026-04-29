@@ -44,6 +44,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.mcc.mycounter.MyCounterApplication
 import com.mcc.mycounter.data.entities.Counter
+import com.mcc.mycounter.data.entities.GoalType
 import com.mcc.mycounter.data.entities.Periodicity
 import com.mcc.mycounter.ui.components.GradientBackground
 import com.mcc.mycounter.ui.components.PrimaryActionButton
@@ -96,6 +97,15 @@ fun CounterEditorScreen(
     var imageUri by remember(existing) { mutableStateOf(existing?.tapImageUri) }
     var periodicity by remember(existing) {
         mutableStateOf(Periodicity.fromName(existing?.periodicity).name)
+    }
+    var goalType by remember(existing) {
+        mutableStateOf(GoalType.fromName(existing?.goalType).name)
+    }
+    var accountabilityEmail by remember(existing) {
+        mutableStateOf(existing?.accountabilityEmail.orEmpty())
+    }
+    var webhookTag by remember(existing) {
+        mutableStateOf(existing?.webhookTag.orEmpty())
     }
 
     // Image picker (system content picker, niente permessi runtime su Android 13+)
@@ -324,6 +334,84 @@ fun CounterEditorScreen(
                     )
                 }
 
+                SectionCard {
+                    Text("Tipo di obiettivo", style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.height(8.dp))
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf(
+                            GoalType.TARGET to "Traguardo (raggiungere)",
+                            GoalType.LIMIT to "Limite (non superare)",
+                            GoalType.NONE to "Nessuno"
+                        ).forEach { (g, label) ->
+                            FilterChip(
+                                selected = goalType == g.name,
+                                onClick = { goalType = g.name },
+                                label = { Text(label) }
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        when (GoalType.fromName(goalType)) {
+                            GoalType.TARGET -> "Sopra l'obiettivo = SUCCESSO. Es. \"10 bicchieri di acqua\"."
+                            GoalType.LIMIT  -> "Sotto l'obiettivo = SUCCESSO. Es. \"max 3 caffè\"."
+                            GoalType.NONE   -> "Nessun esito: solo conteggio puro."
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+
+                SectionCard {
+                    Text("Webhook tag (opzionale)", style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = webhookTag,
+                        onValueChange = { webhookTag = it },
+                        label = { Text("Tag (es. vices, health, work)") },
+                        placeholder = { Text("vices") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(
+                        "Il tag viene inserito nel payload del webhook globale (campo " +
+                                "\"counter.tag\") per permettere a Zapier/n8n/server custom di " +
+                                "instradare gli eventi senza dover decodificare l'id o il nome. " +
+                                "Configura URL ed endpoint del webhook in Impostazioni.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+
+                SectionCard {
+                    Text("Accountability (opzionale)", style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = accountabilityEmail,
+                        // NB: niente .trim() qui — l'utente deve poter digitare spazi/virgole
+                        // mentre inserisce più indirizzi. Il trim/split avviene in lettura.
+                        onValueChange = { accountabilityEmail = it },
+                        label = { Text("Email coach (una o più, separate da virgola)") },
+                        placeholder = { Text("es. coach@example.com, mamma@example.com") },
+                        singleLine = false,
+                        maxLines = 3,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(
+                        "Puoi inserire anche più indirizzi (separati da virgola, " +
+                                "punto-e-virgola o spazio): la bozza-mail li metterà tutti in TO. " +
+                                "Quando il periodo si chiude, l'app prepara una bozza-mail con il PDF " +
+                                "del riepilogo: tu confermi e mandi.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+
                 PrimaryActionButton(
                     text = if (counterId > 0) "Salva modifiche" else "Crea contatore",
                     enabled = name.isNotBlank() && (timeMode || (step.toIntOrNull() ?: 0) > 0),
@@ -348,7 +436,10 @@ fun CounterEditorScreen(
                             periodicity = periodicity,
                             timeMode = timeMode,
                             // Quando si CAMBIA modalità, ferma eventuale timer in corso.
-                            runningStartedAt = if (src?.timeMode != timeMode) null else src?.runningStartedAt
+                            runningStartedAt = if (src?.timeMode != timeMode) null else src?.runningStartedAt,
+                            goalType = goalType,
+                            accountabilityEmail = accountabilityEmail.takeIf { it.isNotBlank() },
+                            webhookTag = webhookTag.trim().takeIf { it.isNotBlank() }
                         )
                         scope.launch {
                             counterViewModel.saveCounter(toSave) { newId ->
